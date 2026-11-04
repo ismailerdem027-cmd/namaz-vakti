@@ -5,12 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ZIP Ac
+      - name: ZIP Ac ve Duzelt
         run: |
           unzip -o "*.zip"
           if [ -d "SadeNamazVakti" ]; then
             cp -r SadeNamazVakti/* .
           fi
+          python3 - << "EOF"
+          import glob
+          for p in glob.glob("app/**/*.kt", recursive=True):
+              out, q = [], False
+              for line in open(p, encoding="utf-8").read().splitlines():
+                  if line.count('"') % 2 == 1:
+                      q = not q
+                  out.append(line + ("\\n" if q else "\n"))
+              open(p, "w", encoding="utf-8").write("".join(out))
+          EOF
       - uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -19,8 +29,8 @@ jobs:
         with:
           gradle-version: "8.5"
       - name: APK Olustur
-        run: gradle assembleRelease
+        run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: SadeNamazVakti-APK
-          path: "**/build/outputs/apk/release/*.apk"
+          path: "**/build/outputs/apk/debug/*.apk"
